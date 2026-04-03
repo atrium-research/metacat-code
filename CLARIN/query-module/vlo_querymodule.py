@@ -1,22 +1,24 @@
+import jq
 import json
-import jsonpath
 import requests
 
 def extractFacetValues(collectionJson):
-    facets = json.loads(collectionJson)
-    print(f'Processing query collection definition containing {len(facets)} facets.')
+    collectionDef = json.loads(collectionJson)
+    queries = collectionDef['queries'];
+    print(f'Processing query collection definition containing {len(queries)} facets.')
+    
+    jqQueryString = collectionDef['interpretation']['jqQuery']
+    jqQuery = jq.compile(jqQueryString)
+    print(f'Collecting values using JQ query: {jqQuery}')
     
     result = {}
-    for facet in facets:
+    for facet in queries:
         if facet['catalogue'] == 'vlo' and facet['url']:
             name = facet['facet']
             url = facet['url'];
             print (f'* Retrieving data for facet \'{name}\' at <{url}>')
             
-            # Get facet values and counts
+            # Query facet values and counts
             responseJson = requests.get(url).json()
-            facetValues = jsonpath.findall('$.values[*].value', responseJson)
-            facetCounts = jsonpath.findall('$.values[*].count', responseJson)
-            result[name] = dict(zip(facetValues, facetCounts));        
-
+            result[name] = jqQuery.input_value(responseJson).all()
     return result
