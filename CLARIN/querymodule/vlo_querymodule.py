@@ -2,8 +2,7 @@ import jq
 import json
 import requests
 
-def extractFacetValues(collectionJson):
-    collectionDef = json.loads(collectionJson)
+def extractFacetValues(collectionDef):
     queries = collectionDef['queries'];
     print(f'Processing query collection definition containing {len(queries)} facets.')
     
